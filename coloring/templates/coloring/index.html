@@ -97,6 +97,37 @@
         border-radius: 12px 0 0 12px;
     }
     
+    #undo {
+      top: 32%;
+      height: 8%;
+      width: 3.5%;
+      right: 3.5%;
+      background-image: url('/static/coloring/images/undo.svg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      display: flex;
+      flex-wrap: wrap;
+      position: absolute;
+      -moz-border-radius: 0 0 0 12px;
+      -webkit-border-radius: 0 0 0 12px;
+      border-radius: 0 0 0 12px;
+    }
+    
+    #redo {
+      top: 32%;
+      height: 8%;
+      width: 3.5%;
+      right: 0;
+      background-image: url('/static/coloring/images/redo.svg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      display: flex;
+      flex-wrap: wrap;
+      position: absolute;
+    }
+    
     #gradient-tool {
         top: 21%;
         height:11%;
@@ -111,9 +142,6 @@
         display: flex;
         flex-wrap: wrap;
         position: absolute;
-        -moz-border-radius: 0 0 0 12px;
-        -webkit-border-radius: 0 0 0 12px;
-        border-radius: 0 0 0 12px;
     }
     
     #normal-fill-tool {
@@ -228,16 +256,51 @@
         $container: $('#normal-fill-tool')
       };
       
+      var undo = {
+        $container: $("#undo")
+      };
+      
+      var redo = {
+        $container: $("#undo")
+
+      };
+      
       cp.$container.toggle();
       sp.$container.toggle();
       var switchedList = [];
       var switchedOn = false;
+      var fillGradient = false;
       
-      function eraserActions() {
-        var element = document.getElementById('eraser');
+      function setSideMenu() {
+        // undo and redo
+        undo.$container.click(function () {
+          console.log(colored);
+          if (colored.length > 1) {
+            if (colorHistory) {
+              console.log(colored);
+             // fill with prev color  colored[1].fillColor = colorHistory[colored[1]]._canvasValues ;
+              colored[1].fillColor = colorHistory[colored[1]]["first"];
+              var what = colorHistory[colored[1]];
+              console.log("we're here " + what["first"]);
+            } 
+          } else if (colored.length <= 1) {
+            colored[0].fillColor = "white";
+          }
+          
+        });
+        
+        // eraser
         eraser.$container.click(function () {
-          cp.history.push("white");
-          console.log(cp.history)
+        cp.history.push("white");
+        });
+        
+        // fill options
+        gradientFill.$container.click(function() {
+          fillGradient = true;
+        });
+        
+        normalFill.$container.click(function() {
+          fillGradient = false;
         });
       }
       
@@ -259,23 +322,12 @@
           }
         });
       }
-      var fillGradient = false;
-      function paintToolActions() {
-        gradientFill.$container.click(function() {
-          fillGradient = true;
-        });
-        
-        normalFill.$container.click(function() {
-          fillGradient = false;
-        });
-      }
-     
+
 			// your rectangle gradient interaction goes in this function
 			// you may also add code outside of the function (e.g., global variables)
 			function myGradientInteraction(){
 				var tool = new paper.Tool();
         var rectangle = new paper.Rectangle(new paper.Point(200, 200), new paper.Point(500, 500));
-        console.log(rectangle);
         var path = new paper.Path.Rectangle(rectangle);
         path.fillColor = 'red';
         var originPoint;
@@ -296,11 +348,12 @@
 			}
 			// your custom interaction goes here!
 			// you may replace everything
+      var colored = [];
+      var colorHistory = {};
 			function myCustomInteraction() {
 				var tool = new paper.Tool();
 				tool.onMouseDown = function (event) {
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
-          
 				    if (hit) {
               if (!fillGradient) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
@@ -310,8 +363,32 @@
                     stops:[cp.history[cp.history.length - 1], "#ffffff"]
                   },
                   origin: hit.item.position,
-                  destination: hit.item.bounds.rightCenter
+                  destination: hit.item.bounds.bottomCenter
                 };
+              }
+              if(colored.indexOf(hit.item) == -1) {
+                  colored = [];
+                  colored.push(hit.item);
+              }
+              
+              else if (colored.length == 2) {
+                console.log(colored);
+                var firstVal = colored[1];
+                colored[0] = firstVal;
+                colored.push(hit.item);
+              } else {
+                colored.push(hit.item);
+                console.log("should be here");
+                console.log(colored);
+              }
+              
+              if(!colorHistory[hit.item]) {
+                colorHistory[hit.item] = {"first": hit.item.fillColor};
+              } else {
+                if (colorHistory[hit.item]["second"]) {
+                  colorHistory[hit.item]["first"] = colorHistory[hit.item]["second"];
+                }
+                colorHistory[hit.item]["second"] = hit.item.fillColor;
               }
               var soundClip = new Audio("/static/coloring/sounds/click.wav");
               soundClip.play();
@@ -373,7 +450,7 @@
                 switchedList = [];
                 switchedOn = false;
                 sp.$container.slideToggle("slow", "linear", function() {
-                    sp.$container.empty();
+                sp.$container.empty();
                 });
               }
             } else {
@@ -493,8 +570,10 @@
 				paper.setup(canvas);
 				getColorsCreatePalette();
         togglePalette();
-        eraserActions();
-        paintToolActions();
+        setSideMenu();
+//         eraserActions();
+//         paintToolActions();
+//         undoAction();
 
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
@@ -533,6 +612,8 @@
   <button id="eraser"> </button>
   <button id="gradient-tool"> </button>
   <button id="normal-fill-tool"> </button>
+  <button id="undo"> </button>
+  <button id="redo"> </button>
   
 </body>
   
