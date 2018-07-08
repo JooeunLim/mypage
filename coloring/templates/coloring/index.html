@@ -16,7 +16,7 @@
         left:0;
         bottom: 0;
         position: absolute;
-        background-color: #aaaab7;
+        background-color: #ccdfff;
         display: flex;
         justify-content: center;
         flex-direction: column;
@@ -92,17 +92,17 @@
         display: flex;
         flex-wrap: wrap;
         position: absolute;
+        -moz-border-radius: 12px 0 0 12px;
+        -webkit-border-radius: 12px 0 0 12px;
+        border-radius: 12px 0 0 12px;
     }
     
     #gradient-tool {
-        top: 10%;
-        height:12%;
-/*       background: -webkit-linear-gradient(#ccdfff, #8fa0bc);
-      background: -moz-linear-gradient(#ccdfff, #8fa0bc);
-      background: -o-linear-gradient(#ccdfff, #8fa0bc);
-      background: linear-gradient(#ccdfff, #8fa0bc); */
-        background: linear-gradient(#d8e6ff, #186af9);
-        background-image: url('/static/coloring/images/bucket.svg'), linear-gradient(to bottom, #d8e6ff, #186af9);
+        top: 21%;
+        height:11%;
+        background-color: #d8e6ff;
+        background-size: 100%;
+        background-image: url('/static/coloring/images/bucket.svg'), linear-gradient(to bottom, #77a9ff, #aac9ff, #ffffff);
         background-position: center;
         background-repeat: no-repeat;
         background-position: center;
@@ -111,29 +111,38 @@
         display: flex;
         flex-wrap: wrap;
         position: absolute;
+        -moz-border-radius: 0 0 0 12px;
+        -webkit-border-radius: 0 0 0 12px;
+        border-radius: 0 0 0 12px;
+    }
+    
+    #normal-fill-tool {
+        top: 10%;
+        height:11%;
+        background-image: url('/static/coloring/images/bucket.svg');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        border-color: #ccdfff;
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute;
+        -moz-border-radius: 12px 0 0 0;
+        -webkit-border-radius: 12px 0 0 0;
+        border-radius: 12px 0 0 0;
     }
     
     button {
         width: 7%;
         right: 0;
         background-color: #ccdfff;
-        -moz-border-radius: 12px 0 0 12px;
-        -webkit-border-radius: 12px 0 0 12px;
-        border-radius: 12px 0 0 12px;
-/*         background-size: 75px; */
-/*         -moz-border-radius: 12px 0 0 12px;
-        -webkit-border-radius: 12px 0 0 12px;
-        border-radius: 12px 0 0 12px;
-        color: #ff5492;
-        display: flex;
-        flex-wrap: wrap;
-        position: absolute; */
     }
     
     button:focus {
         background-color: #abb9d1;
         border-style: inset;
-        border-color: #ccdfff;
+        border-color: #abb9d1;
         border-width: 3px 3px;
     }
     
@@ -211,8 +220,12 @@
         $container: $('#eraser')
       };
       
-      var gradientTool = {
+      var gradientFill = {
         $container: $('#gradient-tool')
+      };
+      
+      var normalFill = {
+        $container: $('#normal-fill-tool')
       };
       
       cp.$container.toggle();
@@ -246,6 +259,16 @@
           }
         });
       }
+      var fillGradient = false;
+      function paintToolActions() {
+        gradientFill.$container.click(function() {
+          fillGradient = true;
+        });
+        
+        normalFill.$container.click(function() {
+          fillGradient = false;
+        });
+      }
      
 			// your rectangle gradient interaction goes in this function
 			// you may also add code outside of the function (e.g., global variables)
@@ -277,10 +300,21 @@
 				var tool = new paper.Tool();
 				tool.onMouseDown = function (event) {
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+          
 				    if (hit) {
+              if (!fillGradient) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
-                var soundClip = new Audio("/static/coloring/sounds/click.wav")
-                soundClip.play();
+              } else {
+                hit.item.fillColor = {
+                  gradient: {
+                    stops:[cp.history[cp.history.length - 1], "#ffffff"]
+                  },
+                  origin: hit.item.position,
+                  destination: hit.item.bounds.rightCenter
+                };
+              }
+              var soundClip = new Audio("/static/coloring/sounds/click.wav");
+              soundClip.play();
 				    }
 				}
 			}
@@ -311,7 +345,7 @@
 			    "border-radius": "12px",
 			    "margin": "3px"}
          ) .addClass("more-button");
-        $moreButton.text("MORE COLORS");
+        $moreButton.text("MORE PALETTES");
         $moreButton.click(function(){
           console.log("in more button")
         });
@@ -460,6 +494,7 @@
 				getColorsCreatePalette();
         togglePalette();
         eraserActions();
+        paintToolActions();
 
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
@@ -496,8 +531,8 @@
   <div id="recent-palette"> </div>
   <div id="swatch-palette"> </div>
   <button id="eraser"> </button>
-  <button id="gradient-tool">
-  </button>
+  <button id="gradient-tool"> </button>
+  <button id="normal-fill-tool"> </button>
   
 </body>
   
