@@ -80,29 +80,61 @@
         border-color: #ff5492;
     }
     
-    button {
-        width: 6%;
-        height: 30%;
-        top: 20%;
-        right: 0;
-        background-color: #ccdfff;
+    #eraser {
+        top: 60%;
+        height:20%;
         background-image: url('/static/coloring/images/eraser.ico');
         background-position: center;
         background-repeat: no-repeat;
-        background-size: 75px;
-        -moz-border-radius: 12px 0 0 12px;
-        -webkit-border-radius: 12px 0 0 12px;
-        border-radius: 12px 0 0 12px;
+        background-size: 80px;
+        
         color: #ff5492;
         display: flex;
         flex-wrap: wrap;
         position: absolute;
     }
     
-    button:focus {
+    #gradient-tool {
+        top: 10%;
+        height:12%;
+/*       background: -webkit-linear-gradient(#ccdfff, #8fa0bc);
+      background: -moz-linear-gradient(#ccdfff, #8fa0bc);
+      background: -o-linear-gradient(#ccdfff, #8fa0bc);
+      background: linear-gradient(#ccdfff, #8fa0bc); */
+        background: linear-gradient(#d8e6ff, #186af9);
+        background-image: url('/static/coloring/images/bucket.svg'), linear-gradient(to bottom, #d8e6ff, #186af9);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
         border-color: #ccdfff;
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute;
+    }
+    
+    button {
+        width: 7%;
+        right: 0;
+        background-color: #ccdfff;
+        -moz-border-radius: 12px 0 0 12px;
+        -webkit-border-radius: 12px 0 0 12px;
+        border-radius: 12px 0 0 12px;
+/*         background-size: 75px; */
+/*         -moz-border-radius: 12px 0 0 12px;
+        -webkit-border-radius: 12px 0 0 12px;
+        border-radius: 12px 0 0 12px;
+        color: #ff5492;
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute; */
+    }
+    
+    button:focus {
+        background-color: #abb9d1;
         border-style: inset;
-        border-width: 10px 10px;
+        border-color: #ccdfff;
+        border-width: 3px 3px;
     }
     
     #swatch-palette {
@@ -176,7 +208,11 @@
       };
       
       var eraser = {
-        $container: $('button')
+        $container: $('#eraser')
+      };
+      
+      var gradientTool = {
+        $container: $('#gradient-tool')
       };
       
       cp.$container.toggle();
@@ -215,20 +251,30 @@
 			// you may also add code outside of the function (e.g., global variables)
 			function myGradientInteraction(){
 				var tool = new paper.Tool();
-
+        var rectangle = new paper.Rectangle(new paper.Point(200, 200), new paper.Point(500, 500));
+        console.log(rectangle);
+        var path = new paper.Path.Rectangle(rectangle);
+        path.fillColor = 'red';
+        var originPoint;
+        
 				tool.onMouseDown = function (event) {
-
+            originPoint = event.point;
 				}
 
 				tool.onMouseUp = function (event) {
-					
+          path.fillColor = {
+            gradient: {
+              stops: [cp.history[cp.history.length-2], cp.history[cp.history.length-1]]
+            },
+            origin: originPoint,
+            destination: event.point
+          };
 				}
 			}
 			// your custom interaction goes here!
 			// you may replace everything
 			function myCustomInteraction() {
 				var tool = new paper.Tool();
-
 				tool.onMouseDown = function (event) {
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
 				    if (hit) {
@@ -373,13 +419,25 @@
                                .addClass("recent-swatch");
         $recentSwatch.click(function() {
           cp.history.push($(this).css("background-color"));
-          rp.$container.prepend($(this));
+          if(gradient) { 
+            rp.$container.append($recentSwatch);
+          } else {
+            rp.$container.prepend($recentSwatch);
+          }     
         });
         var list = rp.$container[0];
-        if (list.childNodes.length >= 8) {
+        if (gradient) {
+           if (list.childNodes.length >= 2) {
+             list.removeChild(list.childNodes[0]);
+           }
+        } else if (list.childNodes.length >= 8) {
           list.removeChild(list.childNodes[list.childNodes.length - 1]);
         }
-        rp.$container.prepend($recentSwatch);
+        if(gradient) { 
+          rp.$container.append($recentSwatch);
+        } else {
+          rp.$container.prepend($recentSwatch);
+        }
       }
 
 			// loads a set of colors from a json to create a color palette
@@ -395,6 +453,7 @@
 					createColorPalette(cp.options);
 				});
 			}
+      var gradient = false;
 
 			function init(custom){
 				paper.setup(canvas);
@@ -410,6 +469,7 @@
 				    if (custom) {
 				    	myCustomInteraction();	
 				    } else {
+              gradient = true;
 				    	myGradientInteraction();
 				    }		
 				}); 
@@ -436,6 +496,8 @@
   <div id="recent-palette"> </div>
   <div id="swatch-palette"> </div>
   <button id="eraser"> </button>
+  <button id="gradient-tool">
+  </button>
   
 </body>
   
