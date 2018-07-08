@@ -10,42 +10,146 @@
 	<script type="text/javascript" src="{% static 'coloring/vendors/paper/paper-full.min.js' %}"></script>
 
 	<style type="text/css">
+    #toggle-palette {
+        width: 12%;
+        height: 15%;
+        left:0;
+        bottom: 0;
+        position: absolute;
+        background-color: #aaaab7;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        background-image: url("/static/coloring/images/max.svg");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 80px;
+    }
+    
+    #recent-palette {
+        width:1500px;
+        height:15%;
+        bottom:0;
+        left: 12%;
+        background-color: #f1f1f1;
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute;
+    }
+    
+    .recent-swatch {
+        width:12%;
+        height:90%;
+        margin:10px;
+        -moz-border-radius: 12px;
+        -webkit-border-radius: 12px;
+        border-radius: 12px;
+        margin: 3px;
+    }
+    
 		#color-palette {
-			width: 300px;
-			background-color: #f1f1f1;
-			display: flex;
-			flex-wrap: wrap;
-			position: absolute;
-			top: 0;
+        width:12%;
+        height:85%;
+        background-color: #f1f1f1;
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute;
+        left:0;
+        bottom:15%;
 		}
 
 		.swatch {
-			width: 24px;
-			height: 24px;
-			-moz-border-radius: 12px;
-			-webkit-border-radius: 12px;
-			border-radius: 12px;
-			margin: 3px;
+        width:100%;
+        height:11%;
+        -moz-border-radius: 12px;
+        -webkit-border-radius: 12px;
+        border-radius: 12px;
+        margin: 3px;
 		}
+    
+    #more-button {
+        width: 100%;
+        height:11%;
+        -moz-border-radius: 12px;
+        -webkit-border-radius: 12px;
+        border-radius: 12px;
+        margin: 3px;
+        color: #ff5492;
+        border-style: solid;
+        border-width: 10px 10px;
+        border-color: #ff5492;
+    }
+    
+    button {
+        width: 6%;
+        height: 30%;
+        top: 20%;
+        right: 0;
+        background-color: #ccdfff;
+        background-image: url('/static/coloring/images/eraser.ico');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 75px;
+        -moz-border-radius: 12px 0 0 12px;
+        -webkit-border-radius: 12px 0 0 12px;
+        border-radius: 12px 0 0 12px;
+        color: #ff5492;
+        display: flex;
+        flex-wrap: wrap;
+        position: absolute;
+    }
+    
+    button:focus {
+        border-color: #ccdfff;
+        border-style: inset;
+        border-width: 10px 10px;
+    }
+    
+    #swatch-palette {
+        width:12%;
+        height:65%;
+        display: flex;
+        background-color: #dbdbdb;
+        background-color: transparent;
+        flex-wrap: wrap;
+        position: absolute;
+        left:12%;
+        top: 10%;
+        -moz-border-radius: 15px;
+        -webkit-border-radius: 15px;
+        border-radius: 15px;
+        border-style: solid;
+        border-color: #e8ecf2;
+    } 
+    
+    .palette-swatch {
+        width: 100%;
+        height: 10%;
+        margin: 0;
+        padding: 0;
+    }
 
 		#myCanvas {
-			padding-left: 0;
+			  padding-left: 0;
 		    padding-right: 0;
 		    margin-left: auto;
 		    margin-right: auto;
 		    display: block;
 		}
+    
+    #
 	</style>
 
 	<script type="text/javascript" canvas="canvas">
 		window.onload = function() {
+      
 			var canvas = document.getElementById('myCanvas');
-
+    
 			// coloring page
 			var mandala = {
 				item: null,
 				lastClicked: null,
-				filePath: '/static/coloring/images/mandala-freepik.svg'
+				filePath: '/static/coloring/images/mandala-freepik.svg',
 			};	
 
 			// color palette
@@ -53,8 +157,60 @@
 				history: ["#000000"], // black selected by default
 				options: [],
 				$container: $('#color-palette')
-			}
+			};
+      
+      // recent palette
+      var rp = {
+        $container: $('#recent-palette')
+      };
+      
+      // swatch palette
+      var sp = {
+        options: [],
+        $container: $('#swatch-palette')
+      };
+      
+      // palette toggle button
+      var mp = {
+        $container: $('#toggle-palette')
+      };
+      
+      var eraser = {
+        $container: $('button')
+      };
+      
+      cp.$container.toggle();
+      sp.$container.toggle();
+      var switchedList = [];
+      var switchedOn = false;
+      
+      function eraserActions() {
+        var element = document.getElementById('eraser');
+        eraser.$container.click(function () {
+          cp.history.push("white");
+          console.log(cp.history)
+        });
+      }
+      
+      function togglePalette() {
+        var element = document.getElementById('toggle-palette');
+        mp.$container.click(function() {
+          if (cp.$container.is(":hidden")) {
+            element.setAttribute('style','background-image:url("/static/coloring/images/min.svg")');
 
+          } else {
+            element.setAttribute('style','background-image:url("/static/coloring/images/max.svg")');           
+          }
+          cp.$container.slideToggle("slow","linear");
+          if (!sp.$container.is(":hidden")) {
+            sp.$container.empty();
+            sp.$container.toggle();
+            switchedList[0].css('border-style', 'none');
+            switchedList = [];
+          }
+        });
+      }
+     
 			// your rectangle gradient interaction goes in this function
 			// you may also add code outside of the function (e.g., global variables)
 			function myGradientInteraction(){
@@ -68,7 +224,6 @@
 					
 				}
 			}
-
 			// your custom interaction goes here!
 			// you may replace everything
 			function myCustomInteraction() {
@@ -78,33 +233,164 @@
 				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
 				    if (hit) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
+                var soundClip = new Audio("/static/coloring/sounds/click.wav")
+                soundClip.play();
 				    }
 				}
 			}
 
-
 			// create a color palette with the given colors
 			function createColorPalette(colors){
+        var myPalette = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'purple'];
 
 				// create a swatch for each color
+        
+        var $moreButton = $("<div>").css({
+          "border-style": "double",
+          "border-color": "#8987ff",
+          "background-color": "#b8b7ff",
+          "color": "#514fff",
+          "border-width":"10px 10px", 
+          "width":"100%", 
+          "height":"11%",
+          "display": "flex",
+          "justify-content": "center",
+          "flex-direction": "column",
+          "text-align": "center",
+          "font-weight": "500",
+          "font-size": "20px",
+          "font-family": "Verdana, Geneva, sans-serif",
+          "-moz-border-radius": "12px",
+			    "-webkit-border-radius": "12px",
+			    "border-radius": "12px",
+			    "margin": "3px"}
+         ) .addClass("more-button");
+        $moreButton.text("MORE COLORS");
+        $moreButton.click(function(){
+          console.log("in more button")
+        });
+
 				for (var i = colors.length - 1; i >= 0; i--) {
 					var $swatch = $("<div>").css("background-color", colors[i])
 									   .addClass("swatch");
+          
 					$swatch.click(function(){
 						// add color to the color palette history
-					  	cp.history.push($(this).css("background-color"));
+
+            if (switchedList.length > 0) {
+              var sameBox = switchedList[0].css("background-color") == $(this).css("background-color");
+              if (!sameBox) {
+                switchedList[0].css('border-style', 'none');
+                
+                $(this).css({'border-style':'inset', 'border-color':$(this).css("background-color"), 'border-width': '10px 10px'});
+                switchedList = [];
+                switchedList.push($(this));
+                switchedOn = true;
+                getHueFromHex($(this).css("background-color"));
+                sp.$container.empty();
+              } else { 
+                 $(this).css('border-style', 'none');
+                switchedList = [];
+                switchedOn = false;
+                sp.$container.slideToggle("slow", "linear", function() {
+                    sp.$container.empty();
+                });
+              }
+            } else {
+              $(this).css({'border-style':'inset', 'border-color':$(this).css("background-color"), 'border-width': '8px 8px'});
+              sp.$container.slideToggle("slow");
+              switchedList.push($(this));
+              switchedOn = true;
+              getHueFromHex($(this).css("background-color"));
+            }
 					});
 					cp.$container.append($swatch);
 				}
+        cp.$container.append($moreButton);
 			}
+      
+      function getHueFromHex(color) {
+//         console.log(color);
+        if (color == "rgb(211, 47, 47)") {
+          getSaturationForHue("red");
+        } else if (color == "rgb(245, 124, 0)") {
+          getSaturationForHue("orange");
+        } else if (color == "rgb(251, 192, 45)") {
+          getSaturationForHue("yellow");
+        } else if (color == "rgb(56, 142, 60)") {
+          getSaturationForHue("green");
+        } else if (color == "rgb(25, 118, 210)") {
+          getSaturationForHue("blue");
+        } else if (color == "rgb(48, 63, 159)") {
+          getSaturationForHue("indigo");
+        } else if (color == "rgb(123, 31, 162)") {
+          getSaturationForHue("purple");
+        }
+      }
+      
+      function getSaturationForHue(color)  {
+        $.getJSON('/static/coloring/vendors/material/material-colors.json', function(colors){
+          sp.options = [];
+					var keys = Object.keys(colors);
+          var numArr = [900, 800, 700, 600, 500, 400, 300, 200, 100, 50];
+          //'a700', 'a400', 'a200', 'a100',
+          for (var i = 0; i < numArr.length; i++) {
+              sp.options.push(colors[color][numArr[i]]);
+					}
+            displayShades(sp.options);
+				});
+      }
+      
+      function displayShades(colors) {
+        for (var i = 0; i < colors.length; i++) {
+          if (i == 0) {
+            var $shade = $("<div>").css({"background-color":colors[i], "border-radius": "13px 13px 0 0"})
+									   .addClass("palette-swatch");
+          } else if (i == colors.length - 1) {
+            var $shade = $("<div>").css({"background-color":colors[i], "border-radius": "0 0 13px 13px"})
+									   .addClass("palette-swatch");
+          } else { 
+            var $shade = $("<div>").css("background-color", colors[i])
+									   .addClass("palette-swatch");
+          }
+          sp.$container.append($shade);
+          $shade.click(function(){
+            cp.history.push($(this).css("background-color"));
+            var curr = $(this).css("background-color");
+            addToRecentPalette(curr);
+            sp.$container.toggle(function() {
+               sp.$container.empty();
+            });
+            switchedList[0].css('border-style', 'none');
+            switchedList = [];
+          });
+        }
+      }
+      
+      // Add recent colors to the bottom palette
+      function addToRecentPalette(color){
+        var $recentSwatch = $("<div>").css("background-color", color)
+                               .addClass("recent-swatch");
+        $recentSwatch.click(function() {
+          cp.history.push($(this).css("background-color"));
+          rp.$container.prepend($(this));
+        });
+        var list = rp.$container[0];
+        if (list.childNodes.length >= 8) {
+          list.removeChild(list.childNodes[list.childNodes.length - 1]);
+        }
+        rp.$container.prepend($recentSwatch);
+      }
 
 			// loads a set of colors from a json to create a color palette
 			function getColorsCreatePalette(){
 				cp.$container.html(" ");
 				$.getJSON('/static/coloring/vendors/material/material-colors.json', function(colors){
 					var keys = Object.keys(colors);
-					for (var i = keys.length - 1; i >= 0; i--) {
-						cp.options.push(colors[keys[i]][500]);
+          var numArr = ['a700', 'a400', 'a200', 'a100', 900, 800, 700, 600, 500, 400, 300, 200, 100, 50];
+          var myPalette = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'purple'];
+          for (var i = myPalette.length - 1; i >= 0; i--) {
+              cp.options.push(colors[myPalette[i]][numArr[6]]);
 					}
 					createColorPalette(cp.options);
 				});
@@ -113,9 +399,12 @@
 			function init(custom){
 				paper.setup(canvas);
 				getColorsCreatePalette();
+        togglePalette();
+        eraserActions();
 
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
+
 				    paper.project.insertLayer(0,mandala.item);
 
 				    if (custom) {
@@ -123,7 +412,6 @@
 				    } else {
 				    	myGradientInteraction();
 				    }		
-					
 				}); 
 			}
 
@@ -143,6 +431,12 @@
 <body>	
 
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
-	<div id="color-palette"></div>
+	<div id="color-palette"> </div>
+  <div id="toggle-palette"> </div>
+  <div id="recent-palette"> </div>
+  <div id="swatch-palette"> </div>
+  <button id="eraser"> </button>
+  
 </body>
+  
 </html>
